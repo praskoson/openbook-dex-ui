@@ -1,6 +1,5 @@
 import {
   Market,
-  MARKETS,
   OpenOrders,
   Orderbook,
   TOKEN_MINTS,
@@ -40,6 +39,7 @@ import {
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
 import { Order } from '@project-serum/serum/lib/market';
 import BonfidaApi from './bonfidaConnector';
+import { MARKETS } from './blast-markets';
 
 // Used in debugging, should be false in production
 const _IGNORE_DEPRECATED = false;
@@ -112,9 +112,9 @@ export function useUnmigratedOpenOrdersAccounts() {
     let deprecatedOpenOrdersAccounts: OpenOrders[] = [];
     const deprecatedProgramIds = Array.from(
       new Set(
-        USE_MARKETS.filter(
-          ({ deprecated }) => deprecated,
-        ).map(({ programId }) => programId.toBase58()),
+        USE_MARKETS.filter(({ deprecated }) => deprecated).map(
+          ({ programId }) => programId.toBase58(),
+        ),
       ),
     ).map((publicKeyStr) => new PublicKey(publicKeyStr));
     let programId: PublicKey;
@@ -166,9 +166,8 @@ export function useUnmigratedOpenOrdersAccounts() {
   };
 }
 
-const MarketContext: React.Context<null | MarketContextValues> = React.createContext<null | MarketContextValues>(
-  null,
-);
+const MarketContext: React.Context<null | MarketContextValues> =
+  React.createContext<null | MarketContextValues>(null);
 
 const _VERY_SLOW_REFRESH_INTERVAL = 5000 * 1000;
 
@@ -303,10 +302,8 @@ export function useSelectedTokenAccounts(): [
   SelectedTokenAccounts,
   (newSelectedTokenAccounts: SelectedTokenAccounts) => void,
 ] {
-  const [
-    selectedTokenAccounts,
-    setSelectedTokenAccounts,
-  ] = useLocalStorageState<SelectedTokenAccounts>('selectedTokenAccounts', {});
+  const [selectedTokenAccounts, setSelectedTokenAccounts] =
+    useLocalStorageState<SelectedTokenAccounts>('selectedTokenAccounts', {});
   return [selectedTokenAccounts, setSelectedTokenAccounts];
 }
 
@@ -571,10 +568,8 @@ export function useLocallyStoredFeeDiscountKey(): {
   storedFeeDiscountKey: PublicKey | undefined;
   setStoredFeeDiscountKey: (key: string) => void;
 } {
-  const [
-    storedFeeDiscountKey,
-    setStoredFeeDiscountKey,
-  ] = useLocalStorageState<string>(`feeDiscountKey`, undefined);
+  const [storedFeeDiscountKey, setStoredFeeDiscountKey] =
+    useLocalStorageState<string>(`feeDiscountKey`, undefined);
   return {
     storedFeeDiscountKey: storedFeeDiscountKey
       ? new PublicKey(storedFeeDiscountKey)
@@ -677,10 +672,8 @@ export function useAllOpenOrdersAccounts() {
 }
 
 export function useAllOpenOrdersBalances() {
-  const [
-    openOrdersAccounts,
-    loadedOpenOrdersAccounts,
-  ] = useAllOpenOrdersAccounts();
+  const [openOrdersAccounts, loadedOpenOrdersAccounts] =
+    useAllOpenOrdersAccounts();
   const [mintInfos, mintInfosConnected] = useMintInfos();
   const [allMarkets] = useAllMarkets();
   if (!loadedOpenOrdersAccounts || !mintInfosConnected) {
@@ -998,9 +991,9 @@ export function useGetOpenOrdersForDeprecatedMarkets(): {
       try {
         console.log('Fetching open orders for', marketName);
         // Can do better than this, we have the open orders accounts already
-        return (
-          await market.loadOrdersForOwner(connection, publicKey)
-        ).map((order) => ({ marketName, market, ...order }));
+        return (await market.loadOrdersForOwner(connection, publicKey)).map(
+          (order) => ({ marketName, market, ...order }),
+        );
       } catch (e) {
         console.log('Failed loading open orders', market.address.toBase58(), e);
         notify({
@@ -1188,8 +1181,7 @@ export function useCurrentlyAutoSettling(): [
   boolean,
   (currentlyAutoSettling: boolean) => void,
 ] {
-  const [currentlyAutoSettling, setCurrentlyAutosettling] = useState<boolean>(
-    false,
-  );
+  const [currentlyAutoSettling, setCurrentlyAutosettling] =
+    useState<boolean>(false);
   return [currentlyAutoSettling, setCurrentlyAutosettling];
 }
