@@ -227,8 +227,8 @@ function MarketSelector({
     setMarketAddress(marketAddress);
   };
 
-  const extractBase = (a) => a.split('/')[0];
-  const extractQuote = (a) => a.split('/')[1];
+  // const extractBase = (a) => a.split('/')[0];
+  // const extractQuote = (a) => a.split('/')[1];
 
   const selectedMarket = getMarketInfos(customMarkets)
     .find(
@@ -284,21 +284,21 @@ function MarketSelector({
       )}
       <OptGroup label="Markets">
         {markets
-          .sort((a, b) =>
-            extractQuote(a.name) === 'USDT' && extractQuote(b.name) !== 'USDT'
-              ? -1
-              : extractQuote(a.name) !== 'USDT' &&
-                extractQuote(b.name) === 'USDT'
-              ? 1
-              : 0,
-          )
-          .sort((a, b) =>
-            extractBase(a.name) < extractBase(b.name)
-              ? -1
-              : extractBase(a.name) > extractBase(b.name)
-              ? 1
-              : 0,
-          )
+          // .sort((a, b) =>
+          //   extractQuote(a.name) === 'USDT' && extractQuote(b.name) !== 'USDT'
+          //     ? -1
+          //     : extractQuote(a.name) !== 'USDT' &&
+          //       extractQuote(b.name) === 'USDT'
+          //     ? 1
+          //     : 0,
+          // )
+          // .sort((a, b) =>
+          //   extractBase(a.name) < extractBase(b.name)
+          //     ? -1
+          //     : extractBase(a.name) > extractBase(b.name)
+          //     ? 1
+          //     : 0,
+          // )
           .map(({ address, name, deprecated }, i) => (
             <Option
               value={address.toBase58()}
