@@ -8,27 +8,29 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { Routes } from './routes';
 import { PreferencesProvider } from './utils/preferences';
 import { ReferrerProvider } from './utils/referrer';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger';
-import {
-  SolletExtensionWalletAdapter,
-  SolletWalletAdapter,
-} from '@solana/wallet-adapter-sollet';
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
-import { MathWalletAdapter } from '@solana/wallet-adapter-mathwallet';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import {
+  SolletWalletAdapter,
+  LedgerWalletAdapter,
+  SolflareWalletAdapter,
+  PhantomWalletAdapter,
+  BackpackWalletAdapter,
+  GlowWalletAdapter,
+  BraveWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
 
 function AppImpl() {
   const { endpoint } = useConnectionConfig();
   const network = useMemo(() => endpoint as WalletAdapterNetwork, [endpoint]);
   const wallets = useMemo(
     () => [
-      new SolletWalletAdapter({ network }),
-      new SolletExtensionWalletAdapter({ network }),
-      new LedgerWalletAdapter(),
-      new SolflareWalletAdapter({ network }),
       new PhantomWalletAdapter(),
-      new MathWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+      new BackpackWalletAdapter(),
+      new LedgerWalletAdapter(),
+      new SolletWalletAdapter({ network }),
+      new GlowWalletAdapter(),
+      new BraveWalletAdapter(),
     ],
     [network],
   );
