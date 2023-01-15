@@ -6,7 +6,7 @@ import {
 import { Button, Col, Menu, Popover, Row, Select } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import logo from '../assets/blast_logo.svg';
 import styled from 'styled-components';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ENDPOINTS, useConnectionConfig } from '../utils/connection';
@@ -143,7 +143,7 @@ export default function TopBar() {
       <Wrapper>
         <LogoWrapper onClick={() => history.push(tradePageUrl)}>
           <img src={logo} alt="" />
-          {'SERUM'}
+          {'OPENBOOK'}
         </LogoWrapper>
         <Menu
           mode="horizontal"
