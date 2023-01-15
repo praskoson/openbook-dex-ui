@@ -5,15 +5,8 @@ import LinkAddress from './LinkAddress';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function WalletConnect() {
-  const {
-    connected,
-    publicKey,
-    connect,
-    disconnect,
-    select,
-    wallet,
-    wallets,
-  } = useWallet();
+  const { connected, publicKey, connect, disconnect, select, wallet, wallets } =
+    useWallet();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const publicKeyString = publicKey?.toBase58() || '';
 
