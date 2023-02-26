@@ -1,4 +1,4 @@
-declare module '@project-serum/sol-wallet-adapter' {
+declare module '@openbook-dex/sol-wallet-adapter' {
   import EventEmitter from 'eventemitter3';
   import { PublicKey, Transaction } from '@solana/web3.js';
 

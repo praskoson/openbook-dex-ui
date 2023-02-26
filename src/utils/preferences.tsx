@@ -1,12 +1,12 @@
 import React, { useContext, useState } from 'react';
 import { sleep, useLocalStorageState } from './utils';
 import { useInterval } from './useInterval';
-import { useConnection } from './connection';
+import { useConnection, useConnectionConfig } from './connection';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMarketInfos, useTokenAccounts } from './markets';
 import { settleAllFunds } from './send';
 import { PreferencesContextValues } from './types';
-import { Market } from '@project-serum/serum';
+import { Market } from '@openbook-dex/openbook';
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base';
 
 export const AUTO_SETTLE_DISABLED_OVERRIDE = true;
@@ -24,15 +24,14 @@ export function PreferencesProvider({ children }) {
   const [tokenAccounts] = useTokenAccounts();
   const { connected, wallet } = useWallet();
   const marketInfoList = useMarketInfos();
-  const [
-    currentlyFetchingMarkets,
-    setCurrentlyFetchingMarkets,
-  ] = useState<boolean>(false);
+  const [currentlyFetchingMarkets, setCurrentlyFetchingMarkets] =
+    useState<boolean>(false);
   const [markets, setMarkets] = useState<Map<string, Market>>(new Map());
   const addToMarketsMap = (marketId, market) => {
     setMarkets((prev) => new Map(prev).set(marketId, market));
   };
   const connection = useConnection();
+  const { priorityFee, computeUnits } = useConnectionConfig();
 
   useInterval(() => {
     const autoSettle = async () => {
@@ -49,8 +48,10 @@ export function PreferencesProvider({ children }) {
           wallet: wallet.adapter as BaseSignerWalletAdapter,
           tokenAccounts: tokenAccounts || [],
           markets: [...markets.values()],
+          priorityFee,
+          computeUnits,
         });
-      } catch (e) {
+      } catch (e: any) {
         console.log('Error auto settling funds: ' + e.message);
         return;
       }
@@ -83,7 +84,7 @@ export function PreferencesProvider({ children }) {
           );
           addToMarketsMap(marketInfo.address.toString(), market);
           await sleep(1000);
-        } catch (e) {
+        } catch (e: any) {
           console.log('Error fetching market: ' + e.message);
         }
       }

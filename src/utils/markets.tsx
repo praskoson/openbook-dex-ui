@@ -4,7 +4,7 @@ import {
   Orderbook,
   TOKEN_MINTS,
   TokenInstructions,
-} from '@project-serum/serum';
+} from '@openbook-dex/openbook';
 import { PublicKey } from '@solana/web3.js';
 import React, { useContext, useEffect, useState } from 'react';
 import {
@@ -36,10 +36,11 @@ import {
   SelectedTokenAccounts,
   TokenAccount,
 } from './types';
-import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
-import { Order } from '@project-serum/serum/lib/market';
-import BonfidaApi from './bonfidaConnector';
+// import BonfidaApi from './bonfidaConnector';
 import { MARKETS } from './blast-markets';
+import { WRAPPED_SOL_MINT } from '@openbook-dex/openbook/lib/token-instructions';
+import { Order } from '@openbook-dex/openbook/lib/market';
+import AlephApi from './mysteryConnector';
 
 // Used in debugging, should be false in production
 const _IGNORE_DEPRECATED = false;
@@ -78,7 +79,7 @@ export function useAllMarkets() {
             marketName: marketInfo.name,
             programId: marketInfo.programId,
           };
-        } catch (e) {
+        } catch (e: any) {
           notify({
             message: 'Error loading all market',
             description: e.message,
@@ -139,7 +140,7 @@ export function useUnmigratedOpenOrdersAccounts() {
               ),
             ),
         );
-      } catch (e) {
+      } catch (e: any) {
         console.log(
           'Error loading deprecated markets',
           programId?.toBase58(),
@@ -375,7 +376,8 @@ export function useBonfidaTrades() {
     if (!marketAddress) {
       return null;
     }
-    return await BonfidaApi.getRecentTrades(marketAddress);
+
+    return await AlephApi.getRecentTrades(marketAddress);
   }
 
   return useAsyncData(
@@ -775,7 +777,7 @@ export const useAllOpenOrders = (): {
               orders: orders,
               marketAddress: marketInfo.address.toBase58(),
             });
-          } catch (e) {
+          } catch (e: any) {
             console.warn(`Error loading open order ${marketInfo.name} - ${e}`);
           }
         };
@@ -924,7 +926,7 @@ export function useUnmigratedDeprecatedMarkets() {
           {},
           marketInfo.programId,
         );
-      } catch (e) {
+      } catch (e: any) {
         console.log('Failed loading market', marketInfo.name, e);
         notify({
           message: 'Error loading market',
@@ -994,7 +996,7 @@ export function useGetOpenOrdersForDeprecatedMarkets(): {
         return (await market.loadOrdersForOwner(connection, publicKey)).map(
           (order) => ({ marketName, market, ...order }),
         );
-      } catch (e) {
+      } catch (e: any) {
         console.log('Failed loading open orders', market.address.toBase58(), e);
         notify({
           message: `Error loading open orders for deprecated ${marketName}`,

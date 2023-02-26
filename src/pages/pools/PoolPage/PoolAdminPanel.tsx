@@ -1,6 +1,6 @@
 import React, { FormEvent, useMemo, useState } from 'react';
-import { AdminControlledPoolInstructions, PoolInfo } from '@project-serum/pool';
-import { TokenInstructions } from '@project-serum/serum';
+import { AdminControlledPoolInstructions, PoolInfo } from '@openbook-dex/pool';
+import { TokenInstructions } from '@openbook-dex/openbook';
 import FloatingElement from '../../../components/layout/FloatingElement';
 import { useConnection } from '../../../utils/connection';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -20,7 +20,7 @@ import { AutoComplete, Button, Input, Select, Tabs } from 'antd';
 import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
-} from '@project-serum/associated-token';
+} from '@openbook-dex/associated-token';
 import { parseTokenMintData, useMintToTickers } from '../../../utils/tokens';
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base';
 import BN from 'bn.js';
@@ -78,7 +78,7 @@ function PauseUnpauseTab({ poolInfo }: TabParams) {
         wallet: wallet.adapter as BaseSignerWalletAdapter,
         transaction,
       });
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: 'Error pausing pool',
         description: e.message,
@@ -102,7 +102,7 @@ function PauseUnpauseTab({ poolInfo }: TabParams) {
         wallet: wallet.adapter as BaseSignerWalletAdapter,
         transaction,
       });
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: 'Error unpausing pool',
         description: e.message,
@@ -502,7 +502,7 @@ function useOnSubmitHandler(
       if (refresh) {
         refreshAllCaches();
       }
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: `Error ${description}`,
         description: e.message,

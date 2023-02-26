@@ -3,13 +3,17 @@ import {
   PlusCircleOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { Button, Col, Menu, Popover, Row, Select } from 'antd';
+import { Button, Col, Menu, Popover, Row, Select, Switch } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import logo from '../assets/blast_logo.svg';
 import styled from 'styled-components';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ENDPOINTS, useConnectionConfig } from '../utils/connection';
+import {
+  ENDPOINTS,
+  useConnection,
+  useConnectionConfig,
+} from '../utils/connection';
 import Settings from './Settings';
 import CustomClusterEndpointDialog from './CustomClusterEndpointDialog';
 import { EndpointInfo } from '../utils/types';
@@ -18,6 +22,7 @@ import { Connection } from '@solana/web3.js';
 import WalletConnect from './WalletConnect';
 import AppSearch from './AppSearch';
 import { getTradePageUrl } from '../utils/markets';
+import { COMPUTE_UNIT_LIMIT, MAX_PRIORITY_FEE } from '../utils/constants';
 
 const Wrapper = styled.div`
   background-color: #0d1017;
@@ -59,12 +64,27 @@ export default function TopBar() {
     setEndpoint,
     availableEndpoints,
     setCustomEndpoints,
+    setPriorityFee,
+    setComputeUnits,
   } = useConnectionConfig();
   const [addEndpointVisible, setAddEndpointVisible] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const location = useLocation();
   const history = useHistory();
   const [searchFocussed, setSearchFocussed] = useState(false);
+  const [isPriorityEnabled, setIsPriorityEnabled] = useState(false);
+
+  const priorityOnChange = (checked) => {
+    setIsPriorityEnabled(checked);
+
+    if (checked) {
+      setPriorityFee(MAX_PRIORITY_FEE);
+      setComputeUnits(COMPUTE_UNIT_LIMIT);
+    } else {
+      setPriorityFee(undefined);
+      setComputeUnits(undefined);
+    }
+  };
 
   const handleClick = useCallback(
     (e) => {
@@ -110,7 +130,7 @@ export default function TopBar() {
           setCustomEndpoints(newCustomEndpoints);
         })
         .catch(handleError);
-    } catch (e) {
+    } catch (e: any) {
       handleError(e);
     } finally {
       setTestingConnection(false);
@@ -268,6 +288,14 @@ export default function TopBar() {
             style={{ paddingLeft: 5, paddingRight: 5 }}
             gutter={16}
           >
+            <Col>
+              Priority Fees
+              <Switch
+                checked={isPriorityEnabled}
+                onChange={priorityOnChange}
+                style={{ marginLeft: 10 }}
+              />
+            </Col>
             <Col>
               <PlusCircleOutlined
                 style={{ color: '#2abdd2' }}

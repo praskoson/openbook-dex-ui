@@ -3,7 +3,7 @@ import DataTable from '../layout/DataTable';
 import { Button, Row } from 'antd';
 import { settleAllFunds } from '../../utils/send';
 import { notify } from '../../utils/notifications';
-import { useConnection } from '../../utils/connection';
+import { useConnection, useConnectionConfig } from '../../utils/connection';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
   useAllMarkets,
@@ -32,6 +32,7 @@ export default function WalletBalancesTable({
   const [tokenAccounts, tokenAccountsConnected] = useTokenAccounts();
   const [allMarkets, allMarketsConnected] = useAllMarkets();
   const [settlingFunds, setSettlingFunds] = useState(false);
+  const { priorityFee, computeUnits } = useConnectionConfig();
 
   async function onSettleFunds() {
     setSettlingFunds(true);
@@ -67,8 +68,10 @@ export default function WalletBalancesTable({
         selectedTokenAccounts,
         wallet: wallet.adapter as BaseSignerWalletAdapter,
         markets: allMarkets.map((marketInfo) => marketInfo.market),
+        priorityFee,
+        computeUnits,
       });
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: 'Error settling funds',
         description: e.message,

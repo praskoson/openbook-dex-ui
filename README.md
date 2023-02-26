@@ -2,6 +2,8 @@
 
 An implementation of a UI for the Serum DEX.
 
+Powered by [Alchemy RPC](https://www.alchemy.com/)
+
 ### Running the UI
 
 Run `yarn` to install dependencies, then run `yarn start` to start a development server or `yarn build` to create a production build that can be served by a static file server. Note that prior to compiling you need to add charts yourself (see below).

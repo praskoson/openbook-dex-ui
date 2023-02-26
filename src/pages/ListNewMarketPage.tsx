@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Form, Input, Tooltip, Typography } from 'antd';
 import { notify } from '../utils/notifications';
-import { MARKETS } from '@project-serum/serum';
-import { useConnection } from '../utils/connection';
+import { MARKETS } from '@openbook-dex/openbook';
+import { useConnection, useConnectionConfig } from '../utils/connection';
 import FloatingElement from '../components/layout/FloatingElement';
 import styled from 'styled-components';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -61,6 +61,8 @@ export default function ListNewMarketPage() {
     </Text>,
     'The quote token is the token used to price trades. For example, the quote token of a BTC/USDT market is USDT.',
   );
+  const { priorityFee, computeUnits } = useConnectionConfig();
+
   const [lotSize, setLotSize] = useState('1');
   const [tickSize, setTickSize] = useState('0.01');
   const dexProgramId = MARKETS.find(({ deprecated }) => !deprecated)?.programId;
@@ -111,9 +113,11 @@ export default function ListNewMarketPage() {
         baseLotSize,
         quoteLotSize,
         dexProgramId: dexProgramId!,
+        priorityFee,
+        computeUnits,
       });
       setListedMarket(marketAddress);
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
       notify({
         message: 'Error listing new market',

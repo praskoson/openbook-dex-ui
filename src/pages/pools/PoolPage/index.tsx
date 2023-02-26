@@ -8,7 +8,7 @@ import {
   decodePoolState,
   isAdminControlledPool,
   PoolInfo,
-} from '@project-serum/pool';
+} from '@openbook-dex/pool';
 import PoolInfoPanel from './PoolInfoPanel';
 import { parseTokenMintData } from '../../../utils/tokens';
 import PoolCreateRedeemPanel from './PoolCreateRedeemPanel';
@@ -36,7 +36,7 @@ export default function PoolPage() {
         state: decodePoolState(poolAccountInfo.data),
         program: poolAccountInfo.owner,
       };
-    } catch (e) {
+    } catch (e: any) {
       return null;
     }
   }, [poolAddress, poolAccountInfo]);
@@ -99,7 +99,7 @@ function isPublicKey(address) {
   try {
     new PublicKey(address);
     return true;
-  } catch (e) {
+  } catch (e: any) {
     return false;
   }
 }

@@ -1,6 +1,6 @@
 import { useLocalStorageState } from './utils';
 import { Account, AccountInfo, Connection, PublicKey } from '@solana/web3.js';
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { setCache, useAsyncData } from './fetch-loop';
 import tuple from 'immutable-tuple';
 import { ConnectionContextValues, EndpointInfo } from './types';
@@ -38,6 +38,10 @@ export function ConnectionProvider({ children }) {
   const sendConnection = useMemo(
     () => new Connection(endpoint, 'recent'),
     [endpoint],
+  );
+  const [priorityFee, setPriorityFee] = useState<number | undefined>(undefined);
+  const [computeUnits, setComputeUnits] = useState<number | undefined>(
+    undefined,
   );
 
   // The websocket library solana/web3.js uses closes its websocket connection when the subscription list
@@ -77,6 +81,10 @@ export function ConnectionProvider({ children }) {
   return (
     <ConnectionContext.Provider
       value={{
+        priorityFee,
+        setPriorityFee,
+        computeUnits,
+        setComputeUnits,
         endpoint,
         setEndpoint,
         connection,
@@ -112,6 +120,10 @@ export function useConnectionConfig() {
     throw new Error('Missing connection context');
   }
   return {
+    priorityFee: context.priorityFee,
+    setPriorityFee: context.setPriorityFee,
+    computeUnits: context.computeUnits,
+    setComputeUnits: context.setComputeUnits,
     endpoint: context.endpoint,
     endpointInfo: context.availableEndpoints.find(
       (info) => info.endpoint === context.endpoint,

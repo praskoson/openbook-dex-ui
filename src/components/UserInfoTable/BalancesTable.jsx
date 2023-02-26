@@ -21,6 +21,7 @@ export default function BalancesTable({
   const connection = useSendConnection();
   const { wallet } = useWallet();
   const { usdcRef, usdtRef } = useReferrer();
+  const { priorityFee, computeUnits } = useConnectionConfig();
 
   async function onSettleFunds(market, openOrders) {
     try {
@@ -39,6 +40,8 @@ export default function BalancesTable({
         ),
         usdcRef,
         usdtRef,
+        priorityFee,
+        computeUnits,
       });
     } catch (e) {
       notify({

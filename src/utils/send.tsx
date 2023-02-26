@@ -1,5 +1,10 @@
 import { notify } from './notifications';
-import { getDecimalCount, sleep } from './utils';
+import {
+  addPriorityFeesIfNecessary,
+  getDecimalCount,
+  mergeTransactions,
+  sleep,
+} from './utils';
 import { getSelectedTokenAccountForMint } from './markets';
 import {
   Account,
@@ -26,9 +31,9 @@ import {
   parseInstructionErrorResponse,
   TOKEN_MINTS,
   TokenInstructions,
-} from '@project-serum/serum';
+} from '@openbook-dex/openbook';
 import { SelectedTokenAccounts, TokenAccount } from './types';
-import { Order } from '@project-serum/serum/lib/market';
+import { Order } from '@openbook-dex/openbook/lib/market';
 import { Buffer } from 'buffer';
 import assert from 'assert';
 import { struct } from 'superstruct';
@@ -83,6 +88,8 @@ export async function settleFunds({
   sendNotification = true,
   usdcRef = undefined,
   usdtRef = undefined,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   market: Market;
   openOrders: OpenOrders;
@@ -93,6 +100,8 @@ export async function settleFunds({
   sendNotification?: boolean;
   usdcRef?: PublicKey;
   usdtRef?: PublicKey;
+  priorityFee?: number;
+  computeUnits?: number;
 }): Promise<string | undefined> {
   if (
     !market ||
@@ -157,6 +166,7 @@ export async function settleFunds({
     settleFundsTransaction,
   ]);
 
+  console.log('Settling funds...');
   return await sendTransaction({
     transaction,
     signers: settleFundsSigners,
@@ -164,6 +174,8 @@ export async function settleFunds({
     connection,
     sendingMessage: 'Settling funds...',
     sendNotification,
+    priorityFee,
+    computeUnits,
   });
 }
 
@@ -173,12 +185,16 @@ export async function settleAllFunds({
   tokenAccounts,
   markets,
   selectedTokenAccounts,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   connection: Connection;
   wallet: BaseSignerWalletAdapter;
   tokenAccounts: TokenAccount[];
   markets: Market[];
   selectedTokenAccounts?: SelectedTokenAccounts;
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   if (!markets || !wallet || !connection || !tokenAccounts) {
     return;
@@ -292,6 +308,8 @@ export async function settleAllFunds({
     signers,
     wallet,
     connection,
+    priorityFee,
+    computeUnits,
   });
 }
 
@@ -300,6 +318,8 @@ export async function cancelOrder(params: {
   connection: Connection;
   wallet: BaseSignerWalletAdapter;
   order: Order;
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   return cancelOrders({ ...params, orders: [params.order] });
 }
@@ -309,11 +329,15 @@ export async function cancelOrders({
   wallet,
   connection,
   orders,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   market: Market;
   wallet: BaseSignerWalletAdapter;
   connection: Connection;
   orders: Order[];
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   const transaction = market.makeMatchOrdersTransaction(5);
   assert(wallet.publicKey, 'Expected `publicKey` to be non-null');
@@ -324,11 +348,14 @@ export async function cancelOrders({
     );
   });
   transaction.add(market.makeMatchOrdersTransaction(5));
+
   return await sendTransaction({
     transaction,
     wallet,
     connection,
     sendingMessage: 'Sending cancel...',
+    priorityFee,
+    computeUnits,
   });
 }
 
@@ -343,6 +370,8 @@ export async function placeOrder({
   baseCurrencyAccount,
   quoteCurrencyAccount,
   feeDiscountPubkey = undefined,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   side: 'buy' | 'sell';
   price: number;
@@ -354,6 +383,8 @@ export async function placeOrder({
   baseCurrencyAccount: PublicKey | undefined;
   quoteCurrencyAccount: PublicKey | undefined;
   feeDiscountPubkey: PublicKey | undefined;
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   let formattedMinOrderSize =
     market?.minOrderSize?.toFixed(getDecimalCount(market.minOrderSize)) ||
@@ -468,6 +499,8 @@ export async function placeOrder({
     connection,
     signers,
     sendingMessage: 'Sending order...',
+    priorityFee,
+    computeUnits,
   });
 }
 
@@ -479,6 +512,8 @@ export async function listMarket({
   baseLotSize,
   quoteLotSize,
   dexProgramId,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   connection: Connection;
   wallet: BaseSignerWalletAdapter;
@@ -487,6 +522,8 @@ export async function listMarket({
   baseLotSize: number;
   quoteLotSize: number;
   dexProgramId: PublicKey;
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   assert(wallet.publicKey, 'Expected `publicKey` to be non-null');
 
@@ -509,7 +546,7 @@ export async function listMarket({
           dexProgramId,
         );
         return [vaultOwner, nonce];
-      } catch (e) {
+      } catch (e: any) {
         nonce.iaddn(1);
       }
     }
@@ -603,6 +640,7 @@ export async function listMarket({
     }),
   );
 
+  // Dev Note: No priority fees are added to this transaction
   const signedTransactions = await signTransactions({
     transactionsAndSigners: [
       { transaction: tx1, signers: [baseVault, quoteVault] },
@@ -618,6 +656,8 @@ export async function listMarket({
     await sendSignedTransaction({
       signedTransaction,
       connection,
+      priorityFee,
+      computeUnits,
     });
   }
 
@@ -640,6 +680,8 @@ export async function sendTransaction({
   successMessage = 'Transaction confirmed',
   timeout = DEFAULT_TIMEOUT,
   sendNotification = true,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   transaction: Transaction;
   wallet: BaseSignerWalletAdapter;
@@ -650,9 +692,18 @@ export async function sendTransaction({
   successMessage?: string;
   timeout?: number;
   sendNotification?: boolean;
+  priorityFee?: number;
+  computeUnits?: number;
 }) {
   const signedTransaction = await signTransaction({
-    transaction,
+    transaction: await addPriorityFeesIfNecessary(
+      connection,
+      transaction,
+      wallet,
+      priorityFee,
+      computeUnits,
+    ),
+    // transaction,
     wallet,
     signers,
     connection,
@@ -665,6 +716,8 @@ export async function sendTransaction({
     successMessage,
     timeout,
     sendNotification,
+    priorityFee,
+    computeUnits,
   });
 }
 
@@ -725,6 +778,8 @@ export async function sendSignedTransaction({
   successMessage = 'Transaction confirmed',
   timeout = DEFAULT_TIMEOUT,
   sendNotification = true,
+  priorityFee = undefined,
+  computeUnits = undefined,
 }: {
   signedTransaction: Transaction;
   connection: Connection;
@@ -733,6 +788,8 @@ export async function sendSignedTransaction({
   successMessage?: string;
   timeout?: number;
   sendNotification?: boolean;
+  priorityFee?: number;
+  computeUnits?: number;
 }): Promise<string> {
   const rawTransaction = signedTransaction.serialize();
   const startTime = getUnixTs();
@@ -762,7 +819,7 @@ export async function sendSignedTransaction({
   })();
   try {
     await awaitTransactionSignatureConfirmation(txid, timeout, connection);
-  } catch (err) {
+  } catch (err: any) {
     if (err.timeout) {
       throw new Error('Timed out awaiting confirmation on transaction');
     }
@@ -771,7 +828,7 @@ export async function sendSignedTransaction({
       simulateResult = (
         await simulateTransaction(connection, signedTransaction, 'single')
       ).value;
-    } catch (e) {}
+    } catch (e: any) {}
     if (simulateResult && simulateResult.err) {
       if (simulateResult.logs) {
         for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
@@ -841,7 +898,7 @@ async function awaitTransactionSignatureConfirmation(
           'recent',
         );
         console.log('Set up WS connection', txid);
-      } catch (e) {
+      } catch (e: any) {
         done = true;
         console.log('WS error in setup', txid, e);
       }
@@ -868,7 +925,7 @@ async function awaitTransactionSignatureConfirmation(
                 resolve(result);
               }
             }
-          } catch (e) {
+          } catch (e: any) {
             if (!done) {
               console.log('REST connection error: txid', txid, e);
             }
@@ -880,16 +937,6 @@ async function awaitTransactionSignatureConfirmation(
   });
   done = true;
   return result;
-}
-
-function mergeTransactions(transactions: (Transaction | undefined)[]) {
-  const transaction = new Transaction();
-  transactions
-    .filter((t): t is Transaction => t !== undefined)
-    .forEach((t) => {
-      transaction.add(t);
-    });
-  return transaction;
 }
 
 function jsonRpcResult(resultDescription: any) {

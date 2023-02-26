@@ -3,6 +3,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { useMarket } from '../utils/markets';
 import FloatingElement from './layout/FloatingElement';
+import { BonfidaTrade } from '../utils/types';
+import BN from 'bn.js';
 
 const Title = styled.div`
   color: rgba(255, 255, 255, 1);
@@ -24,7 +26,7 @@ export default function PublicTrades({ smallScreen }) {
           : {
               marginTop: '10px',
               minHeight: '270px',
-              maxHeight: 'calc(100vh - 700px)',
+              maxHeight: 'calc(100vh - 315px)',
             }
       }
     >
@@ -44,9 +46,10 @@ export default function PublicTrades({ smallScreen }) {
             marginRight: '-20px',
             paddingRight: '5px',
             overflowY: 'scroll',
+            minHeight: '172px',
             maxHeight: smallScreen
               ? 'calc(100% - 75px)'
-              : 'calc(100vh - 800px)',
+              : 'calc(100vh - 413px)',
           }}
         >
           {trades.map((trade: BonfidaTrade, i: number) => (
@@ -65,9 +68,7 @@ export default function PublicTrades({ smallScreen }) {
               </Col>
               <Col span={8} style={{ textAlign: 'right' }}>
                 {market?.minOrderSize && !isNaN(trade.size)
-                  ? Number(trade.size).toFixed(
-                      getDecimalCount(market.minOrderSize),
-                    )
+                  ? market!.baseSplSizeToNumber(new BN(trade.size))
                   : trade.size}
               </Col>
               <Col span={8} style={{ textAlign: 'right', color: '#434a59' }}>

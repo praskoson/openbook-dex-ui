@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col, Typography, Tag } from 'antd';
 import { useFeeDiscountKeys } from '../../utils/markets';
 import DataTable from '../layout/DataTable';
-import { TokenInstructions, getFeeRates } from '@project-serum/serum';
+import { TokenInstructions, getFeeRates } from '@openbook-dex/openbook';
 import { percentFormat } from '../../utils/utils';
 
 export default function FeesTable() {

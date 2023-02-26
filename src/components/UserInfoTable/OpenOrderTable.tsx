@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Button, Col, Row, Tag } from 'antd';
 import { cancelOrder } from '../../utils/send';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useSendConnection } from '../../utils/connection';
+import { useConnectionConfig, useSendConnection } from '../../utils/connection';
 import { notify } from '../../utils/notifications';
 import { DeleteOutlined } from '@ant-design/icons';
 import { OrderWithMarketAndMarketName } from '../../utils/types';
@@ -33,6 +33,7 @@ export default function OpenOrderTable({
   let connection = useSendConnection();
 
   const [cancelId, setCancelId] = useState(null);
+  const { priorityFee, computeUnits } = useConnectionConfig();
 
   async function cancel(order) {
     setCancelId(order?.orderId);
@@ -46,8 +47,10 @@ export default function OpenOrderTable({
         market: order.market,
         connection,
         wallet: wallet.adapter as BaseSignerWalletAdapter,
+        priorityFee,
+        computeUnits,
       });
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: 'Error cancelling order',
         description: e.message,

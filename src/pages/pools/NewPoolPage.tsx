@@ -16,7 +16,7 @@ import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { sendSignedTransaction, signTransactions } from '../../utils/send';
 import { useMintInput } from '../../components/useMintInput';
-import { PoolTransactions } from '@project-serum/pool';
+import { PoolTransactions } from '@openbook-dex/pool';
 import { useTokenAccounts } from '../../utils/markets';
 import BN from 'bn.js';
 import { notify } from '../../utils/notifications';
@@ -98,40 +98,38 @@ export default function NewPoolPage() {
     setSubmitting(true);
     try {
       const assets = initialAssets as ValidInitialAsset[];
-      const [
-        poolAddress,
-        transactionsAndSigners,
-      ] = await PoolTransactions.initializeSimplePool({
-        connection,
-        programId: new PublicKey(programId),
-        poolName,
-        poolStateSpace: 1024,
-        poolMintDecimals: 6,
-        initialPoolMintSupply: new BN(
-          Math.round(10 ** 6 * parseFloat(initialSupply)),
-        ),
-        assetMints: assets.map((asset) => asset.mint),
-        initialAssetQuantities: assets.map((asset) => new BN(asset.quantity)),
-        creator: publicKey,
-        creatorAssets: assets.map((asset) => {
-          const found = tokenAccounts?.find((tokenAccount) =>
-            tokenAccount.effectiveMint.equals(asset.mint),
-          );
-          if (!found) {
-            throw new Error('No token account for ' + asset.mint.toBase58());
-          }
-          return found.pubkey;
-        }),
-        additionalAccounts: adminControlled
-          ? [
-              {
-                pubkey: new PublicKey(adminAddress),
-                isSigner: false,
-                isWritable: false,
-              },
-            ]
-          : [],
-      });
+      const [poolAddress, transactionsAndSigners] =
+        await PoolTransactions.initializeSimplePool({
+          connection,
+          programId: new PublicKey(programId),
+          poolName,
+          poolStateSpace: 1024,
+          poolMintDecimals: 6,
+          initialPoolMintSupply: new BN(
+            Math.round(10 ** 6 * parseFloat(initialSupply)),
+          ),
+          assetMints: assets.map((asset) => asset.mint),
+          initialAssetQuantities: assets.map((asset) => new BN(asset.quantity)),
+          creator: publicKey,
+          creatorAssets: assets.map((asset) => {
+            const found = tokenAccounts?.find((tokenAccount) =>
+              tokenAccount.effectiveMint.equals(asset.mint),
+            );
+            if (!found) {
+              throw new Error('No token account for ' + asset.mint.toBase58());
+            }
+            return found.pubkey;
+          }),
+          additionalAccounts: adminControlled
+            ? [
+                {
+                  pubkey: new PublicKey(adminAddress),
+                  isSigner: false,
+                  isWritable: false,
+                },
+              ]
+            : [],
+        });
       const signed = await signTransactions({
         transactionsAndSigners,
         wallet: wallet.adapter as BaseSignerWalletAdapter,
@@ -141,7 +139,7 @@ export default function NewPoolPage() {
         await sendSignedTransaction({ signedTransaction, connection });
       }
       setNewPoolAddress(poolAddress);
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
       notify({
         message: 'Error creating new pool',

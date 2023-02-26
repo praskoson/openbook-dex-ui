@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PublicKey } from '@solana/web3.js';
+import {
+  ComputeBudgetProgram,
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedMessage,
+  VersionedTransaction,
+} from '@solana/web3.js';
 import BN from 'bn.js';
+import { COMPUTE_UNIT_LIMIT_MULTIPLIER } from './constants';
+import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base';
 
 export function isValidPublicKey(key) {
   if (!key) {
@@ -182,4 +193,74 @@ export function flatten(obj, { prefix = '', restrictTo }) {
     });
   })(obj, prefix, restrict);
   return result;
+}
+
+export function mergeTransactions(
+  transactions: (Transaction | TransactionInstruction | undefined)[],
+) {
+  const transaction = new Transaction();
+  transactions
+    .filter((t): t is Transaction => t !== undefined)
+    .forEach((t) => {
+      transaction.add(t);
+    });
+  return transaction;
+}
+
+export function calculateComputeUnitPrice(
+  priorityFee,
+  computeUnitLimit,
+): number {
+  return priorityFee / (computeUnitLimit * 1e-6);
+}
+
+export async function addPriorityFeesIfNecessary(
+  connection: Connection,
+  transaction: Transaction,
+  wallet: BaseSignerWalletAdapter,
+  priorityFee?: number,
+  computeUnits?: number,
+): Promise<Transaction> {
+  let transactionMessage = new TransactionMessage({
+    payerKey: wallet.publicKey!,
+    instructions: transaction.instructions,
+    recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+  }).compileToV0Message();
+  let simulatedUnits =
+    (
+      await connection.simulateTransaction(
+        new VersionedTransaction(transactionMessage),
+        {
+          replaceRecentBlockhash: true,
+          sigVerify: false,
+        },
+      )
+    ).value.unitsConsumed || Infinity;
+
+  let maxComputeUnits = Math.floor(
+    Math.min(
+      computeUnits || Infinity,
+      simulatedUnits * COMPUTE_UNIT_LIMIT_MULTIPLIER,
+    ),
+  );
+
+  if (priorityFee != undefined) {
+    transaction.instructions.unshift(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: Math.floor(
+          calculateComputeUnitPrice(priorityFee, maxComputeUnits),
+        ),
+      }),
+    );
+  }
+
+  if (computeUnits != undefined) {
+    transaction.instructions.unshift(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: maxComputeUnits,
+      }),
+    );
+  }
+
+  return transaction;
 }

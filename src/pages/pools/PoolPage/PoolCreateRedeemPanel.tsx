@@ -1,4 +1,4 @@
-import { getPoolBasket, PoolInfo, PoolTransactions } from '@project-serum/pool';
+import { getPoolBasket, PoolInfo, PoolTransactions } from '@openbook-dex/pool';
 import React, { useMemo, useState } from 'react';
 import FloatingElement from '../../../components/layout/FloatingElement';
 import { Button, Input, Spin, Tabs, Typography } from 'antd';
@@ -121,7 +121,7 @@ function CreateRedeemTab({ poolInfo, mintInfo, tab }: CreateRedeemInnerPanel) {
         transaction,
         signers,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
       notify({
         message:

@@ -1,8 +1,8 @@
 import * as BufferLayout from 'buffer-layout';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
-import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
+import { WRAPPED_SOL_MINT } from '@openbook-dex/openbook/lib/token-instructions';
 import { TokenAccount } from './types';
-import { TOKEN_MINTS } from '@project-serum/serum';
+import { TOKEN_MINTS } from '@openbook-dex/openbook';
 import { useAllMarkets, useCustomMarkets, useTokenAccounts } from './markets';
 import { getMultipleSolanaAccounts } from './send';
 import { useConnection } from './connection';
@@ -26,9 +26,11 @@ export const MINT_LAYOUT = BufferLayout.struct([
   BufferLayout.blob(36),
 ]);
 
-export function parseTokenAccountData(
-  data: Buffer,
-): { mint: PublicKey; owner: PublicKey; amount: number } {
+export function parseTokenAccountData(data: Buffer): {
+  mint: PublicKey;
+  owner: PublicKey;
+  amount: number;
+} {
   let { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
   return {
     mint: new PublicKey(mint),

@@ -14,7 +14,7 @@ import DepositDialog from './DepositDialog';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from './Link';
 import { settleFunds } from '../utils/send';
-import { useSendConnection } from '../utils/connection';
+import { useConnectionConfig, useSendConnection } from '../utils/connection';
 import { notify } from '../utils/notifications';
 import { Balances } from '../utils/types';
 import StandaloneTokenAccountsSelect from './StandaloneTokenAccountSelect';
@@ -43,6 +43,7 @@ const ActionButton = styled(Button)`
 
 export default function StandaloneBalancesDisplay() {
   const { baseCurrency, quoteCurrency, market } = useMarket();
+  const { priorityFee, computeUnits } = useConnectionConfig();
   const balances = useBalances();
   const openOrdersAccount = useSelectedOpenOrdersAccount(true);
   const connection = useSendConnection();
@@ -111,8 +112,10 @@ export default function StandaloneBalancesDisplay() {
         quoteCurrencyAccount,
         usdcRef,
         usdtRef,
+        priorityFee,
+        computeUnits,
       });
-    } catch (e) {
+    } catch (e: any) {
       notify({
         message: 'Error settling funds',
         description: e.message,
@@ -144,7 +147,6 @@ export default function StandaloneBalancesDisplay() {
         return;
       }
       try {
-        console.log('Settling funds...');
         setLastSettledAt(Date.now());
         await settleFunds({
           market,
@@ -155,12 +157,13 @@ export default function StandaloneBalancesDisplay() {
           quoteCurrencyAccount,
           usdcRef,
           usdtRef,
+          priorityFee,
+          computeUnits,
         });
-      } catch (e) {
+      } catch (e: any) {
         console.log('Error auto settling funds: ' + e.message);
         return;
       }
-      console.log('Finished settling funds.');
     };
     connected &&
       (wallet?.adapter as any).autoApprove &&

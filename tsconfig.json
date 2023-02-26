@@ -19,7 +19,9 @@
     "jsx": "react-jsx",
     "lib": ["dom", "esnext"],
     "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": false
+    "skipLibCheck": true,
+
+    "typeRoots": ["../../types/", "../../node_modules/@types"]
   },
   "include": ["./src/"],
   "exclude": [
